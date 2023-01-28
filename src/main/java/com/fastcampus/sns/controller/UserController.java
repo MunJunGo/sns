@@ -9,7 +9,6 @@ import com.fastcampus.sns.controller.response.UserLoginResponse;
 import com.fastcampus.sns.model.User;
 import com.fastcampus.sns.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +26,7 @@ public class UserController {
     public Response<UserJoinResponse> join(@RequestBody UserJoinRequest request){
 
         //join
-        User user = userService.join(request.getUserName(), request.getPassWord());
+        User user = userService.join(request.getName(), request.getPassword());
 
         return Response.success(UserJoinResponse.fromUser(user));
     }
@@ -36,7 +35,7 @@ public class UserController {
     public Response<UserLoginResponse> login(@RequestBody UserLoginRequest request){
 
         //join
-        String token = userService.login(request.getUserName(), request.getPassWord());
+        String token = userService.login(request.getName(), request.getPassword());
 
         return Response.success(new UserLoginResponse(token));
     }
