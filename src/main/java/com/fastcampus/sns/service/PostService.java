@@ -7,6 +7,8 @@ import com.fastcampus.sns.model.AlarmType;
 import com.fastcampus.sns.model.Comment;
 import com.fastcampus.sns.model.Post;
 import com.fastcampus.sns.model.entity.*;
+import com.fastcampus.sns.model.event.AlarmEvent;
+import com.fastcampus.sns.producer.AlarmPoducer;
 import com.fastcampus.sns.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,15 +27,12 @@ public class PostService {
     private final LikeEntityRepository likeEntityRepository;
     private final CommentEntityRepository commentEntityRepository;
     private final AlarmEntityRepository alarmEntityRepository;
+    private final AlarmPoducer alarmPoducer;
 
     @Transactional
     public void create(String title, String body, String userName){
-
-
         UserEntity userEntity = getUserOrException(userName);
-
         PostEntity saved = postEntityRepository.save(PostEntity.of(title, body, userEntity));
-
     }
 
     @Transactional
@@ -65,7 +64,8 @@ public class PostService {
         if(postEntity.getUser() != userEntity){
             throw new SnsApplicationException(ErrorCode.INVALID_PERMISSION, String.format("%s has no permission with %s", userName, postId));
         }
-
+        likeEntityRepository.deleteAllByPost(postEntity);
+        commentEntityRepository.deleteAllByPost(postEntity);
         postEntityRepository.delete(postEntity);
 
 
@@ -100,11 +100,14 @@ public class PostService {
         //like save
         likeEntityRepository.save(LikeEntity.of(userEntity, postEntity));
 
-        alarmEntityRepository.save(AlarmEntity.of(postEntity.getUser(), AlarmType.NEW_LIKE_ON_POST, new AlarmArgs(userEntity.getId(), postEntity.getId())));
+        //AlarmEntity alarmEntity = alarmEntityRepository.save(AlarmEntity.of(postEntity.getUser(), AlarmType.NEW_LIKE_ON_POST, new AlarmArgs(userEntity.getId(), postEntity.getId())));
+
+        alarmPoducer.send(new AlarmEvent(postEntity.getUser().getId(), AlarmType.NEW_LIKE_ON_POST, new AlarmArgs(userEntity.getId(), postEntity.getId())));
+
     }
 
     @Transactional
-    public int likeCount(Integer postId) {
+    public long likeCount(Integer postId) {
         PostEntity postEntity = getPostOrException(postId);
 
         //like count

@@ -18,4 +18,6 @@ public interface AlarmEntityRepository extends JpaRepository<AlarmEntity, Intege
 
     Page<AlarmEntity> findAllByUser(UserEntity user, Pageable pageable);
 
+    //@Query(value = "SELECT * FROM AlarmEntity entity WHERE entity.user_id = :userId")
+    Page<AlarmEntity> findAllByUserId(Integer userId, Pageable pageable);
 }
